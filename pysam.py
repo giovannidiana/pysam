@@ -10,7 +10,7 @@ class Model:
     def __init__(self): raise NotImplementedError
     def LogLikelihood(self,X): raise NotImplementedError
     def LogPrior(self,X): raise NotImplementedError
-    def rPrior(self,X): raise NotImplementedError
+    def rPrior(self,n): raise NotImplementedError
     def Density(self,X): raise NotImplementedError
 
     
@@ -18,7 +18,7 @@ class Inference :
 
     def __init__(self,model):
         self.model = model
-    
+
     def move_part(self,v,h):
         # v is an array Nsamples x par
         nparams = v.ndim
@@ -38,6 +38,23 @@ class Inference :
         mask=np.log(u)<alpha
         v2[mask]=v_new[mask]
         return(v2)
+
+    def IS(self,npart):
+        sample=self.model.rPrior(npart)
+        weights=LogLikelihood(sample)
+        maxw=np.max(weights)
+
+        w2 = np.exp(weights-maxw)
+        w2_sum = np.sum(w2)
+
+        ESS=1.0/(np.sum((w2/w2_sum)**2))
+
+        posterior_means = np.average(sample,0,W)
+
+        self.weighted_samples = [sample, W]
+        self.ML = maxw + np.log(np.sum(np.exp(weights-maxw)))-np.log(npart)
+        self.posterior_means = posterior_means
+        self.ESS = ESS
 
     def SMC(self,npart,steps=11):
 
@@ -88,13 +105,14 @@ class Inference :
             
         posterior_means = np.average(sample,0,W)
 
-        return([posterior_means,ESS,sample,W,LogML])
+        self.weighted_samples = [sample, W]
+        self.LML = LogML 
+        self.posterior_means = posterior_means
+        self.ESS = ESS
 
-    def plot_samples(self,sample):
-        sample=sample[2]
-        weights=sample[3]
+    def plot_samples(self):
 
-        plt.hist(sample,weights=weights,bins=np.linspace(2.5,2.8))
+        plt.hist(self.weighted_samples[0],weights=self.weighted_samples[1],density=1)
         plt.show()
 
 
