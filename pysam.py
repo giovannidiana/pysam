@@ -56,16 +56,16 @@ class Inference :
         for h in protocol[1:]:
         
             ESS=1.0/np.sum(W**2)
-            #if ESS<npart/2.0:
-            if True:
+            if ESS<npart/2.0:
+            #if True:
                 if sample.ndim==1 :
                     sample=np.random.choice(sample,npart,True,W)
                 else:
                     ancestors = np.random.choice(np.arange(npart),npart,True,W)
                     sample=sample[ancestors,:]
             
-            W=np.repeat(1.0/npart,npart)
-            logW=-np.log(npart)
+                W=np.repeat(1.0/npart,npart)
+                logW=-np.log(npart)
 
             delta=protocol[k+1]-protocol[k]
             log_w_inc = delta*self.model.LogLikelihood(sample)  
