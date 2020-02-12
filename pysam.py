@@ -41,7 +41,7 @@ class Inference :
 
     def IS(self,npart):
         sample=self.model.rPrior(npart)
-        weights=LogLikelihood(sample)
+        weights=self.model.LogLikelihood(sample)
         maxw=np.max(weights)
 
         w2 = np.exp(weights-maxw)
@@ -49,10 +49,10 @@ class Inference :
 
         ESS=1.0/(np.sum((w2/w2_sum)**2))
 
-        posterior_means = np.average(sample,0,W)
+        posterior_means = np.average(sample,0,w2/w2_sum)
 
-        self.weighted_samples = [sample, W]
-        self.ML = maxw + np.log(np.sum(np.exp(weights-maxw)))-np.log(npart)
+        self.weighted_samples = [sample, w2/w2_sum]
+        self.LML = maxw + np.log(np.sum(np.exp(weights-maxw)))-np.log(npart)
         self.posterior_means = posterior_means
         self.ESS = ESS
 
@@ -110,9 +110,19 @@ class Inference :
         self.posterior_means = posterior_means
         self.ESS = ESS
 
-    def plot_samples(self):
+    def plot_samples(self,Range=None):
 
-        plt.hist(self.weighted_samples[0],weights=self.weighted_samples[1],density=1)
+        if Range is None:
+            plt.hist(self.weighted_samples[0],
+                weights=self.weighted_samples[1],
+                density=1)
+        else :
+            bins=np.linspace(Range[0],Range[1],20)
+            plt.hist(self.weighted_samples[0],
+                weights=self.weighted_samples[1],
+                density=1,
+                bins=bins)
+
         plt.show()
 
 
