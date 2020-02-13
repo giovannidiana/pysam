@@ -29,7 +29,7 @@ class Inference :
 
         #note: reshape by default is row-major.
         #      sum(X,axis=0) is colsum
-        np.reshape(fac,(npart,nparams))
+        if nparams>1 : fac=fac.reshape((npart,nparams))
         v_new = v*fac 
         ll1=h*self.model.LogLikelihood(v_new) + self.model.LogPrior(v_new)
         alpha = ll1-ll0 + np.sum(np.reshape(stat.gamma.logpdf(1.0/fac,1000,scale=0.001) - stat.gamma.logpdf(fac,1000,scale=0.001),(npart,nparams)),1)
@@ -110,15 +110,20 @@ class Inference :
         self.posterior_means = posterior_means
         self.ESS = ESS
 
-    def plot_samples(self,Range=None):
+    def plot_samples(self,Range=None,var=0):
+
+        if self.weighted_samples[0].ndim==1:
+            samples = self.weighted_samples[0]
+        else:
+            samples = self.weighted_samples[0][:,var]
 
         if Range is None:
-            plt.hist(self.weighted_samples[0],
+            plt.hist(samples,
                 weights=self.weighted_samples[1],
                 density=1)
         else :
             bins=np.linspace(Range[0],Range[1],20)
-            plt.hist(self.weighted_samples[0],
+            plt.hist(samples,
                 weights=self.weighted_samples[1],
                 density=1,
                 bins=bins)
